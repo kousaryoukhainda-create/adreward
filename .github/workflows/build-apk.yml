@@ -44,7 +44,7 @@ jobs:
           EOF
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --verbose
 
       - name: Build Web App
         run: npm run build
@@ -56,10 +56,13 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
+          echo "Starting Gradle build..."
           ./gradlew assembleDebug --stacktrace --no-daemon
+          echo "Gradle build finished."
 
       - name: Verify APK exists
         run: |
+          echo "Checking for APK..."
           ls -la android/app/build/outputs/apk/debug/
           find android/app/build -name "*.apk" -type f
 
