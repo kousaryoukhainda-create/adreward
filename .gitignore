@@ -29,3 +29,9 @@ npm-debug.log*
 
 # Firebase
 .firebase/
+
+# Android - keep everything except build outputs
+!android/
+android/app/build/
+android/.gradle/
+android/build/

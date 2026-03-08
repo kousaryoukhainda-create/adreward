@@ -26,17 +26,31 @@ jobs:
         with:
           packages: 'platform-tools,platforms;android-34,build-tools;34.0.0'
 
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          REACT_APP_FIREBASE_API_KEY=placeholder
+          REACT_APP_FIREBASE_AUTH_DOMAIN=placeholder.firebaseapp.com
+          REACT_APP_FIREBASE_PROJECT_ID=placeholder
+          REACT_APP_FIREBASE_STORAGE_BUCKET=placeholder.appspot.com
+          REACT_APP_FIREBASE_MESSAGING_SENDER_ID=placeholder
+          REACT_APP_FIREBASE_APP_ID=placeholder
+          REACT_APP_APPLOVIN_SDK_KEY=placeholder
+          REACT_APP_APPLOVIN_REWARDED_AD_UNIT_WEB=placeholder
+          REACT_APP_APPLOVIN_REWARDED_AD_UNIT_ANDROID=placeholder
+          REACT_APP_IRONSOURCE_APP_KEY=placeholder
+          REACT_APP_MIN_WITHDRAWAL=1.00
+          REACT_APP_ADMIN_EMAIL=admin@placeholder.com
+          EOF
+
       - name: Install Dependencies
         run: npm install
 
       - name: Build Web App
         run: npm run build
 
-      - name: Setup Capacitor Android
-        run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap add android
-          npx cap sync android
+      - name: Sync Capacitor
+        run: npx cap sync android
 
       - name: Build APK
         run: |
