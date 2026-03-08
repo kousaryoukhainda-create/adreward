@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">AdReward</string>
-    <string name="title_activity_main">AdReward</string>
-    <string name="package_name">com.adreward.app</string>
-    <string name="custom_url_scheme">com.adreward.app</string>
-</resources>
