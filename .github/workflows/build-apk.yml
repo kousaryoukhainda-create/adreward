@@ -44,27 +44,44 @@ jobs:
           EOF
 
       - name: Install Dependencies
-        run: npm install --verbose
+        run: |
+          echo "=== Starting npm install ==="
+          date
+          npm install 2>&1 | tail -50
+          echo "=== npm install completed ==="
+          date
 
       - name: Build Web App
-        run: npm run build
+        run: |
+          echo "=== Starting React build ==="
+          date
+          npm run build 2>&1 | tail -30
+          echo "=== React build completed ==="
+          date
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: |
+          echo "=== Starting Capacitor sync ==="
+          date
+          npx cap sync android 2>&1
+          echo "=== Capacitor sync completed ==="
+          date
 
       - name: Build APK
         run: |
+          echo "=== Starting Gradle build ==="
+          date
           cd android
           chmod +x gradlew
-          echo "Starting Gradle build..."
-          ./gradlew assembleDebug --stacktrace --no-daemon
-          echo "Gradle build finished."
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1
+          echo "=== Gradle build completed ==="
+          date
 
       - name: Verify APK exists
         run: |
-          echo "Checking for APK..."
-          ls -la android/app/build/outputs/apk/debug/
-          find android/app/build -name "*.apk" -type f
+          echo "=== Checking for APK ==="
+          ls -la android/app/build/outputs/apk/debug/ || echo "APK directory not found"
+          find android/app/build -name "*.apk" -type f || echo "No APK files found"
 
       - name: Upload APK Debug
         uses: actions/upload-artifact@v4
