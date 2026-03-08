@@ -1,0 +1,62 @@
+// firestore.rules
+// ─── Firestore Security Rules ─────────────────────────────────────────────────
+// Deploy with: firebase deploy --only firestore:rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+    function isSignedIn()      { return request.auth != null; }
+    function isOwner(uid)      { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin()         { return isSignedIn() && request.auth.token.admin == true; }
+    function isValidAmount(a)  { return a is number && a > 0 && a <= 10000; }
+
+    // ── Users collection ──────────────────────────────────────────────────────
+    // Users can read/write their own doc; only Cloud Functions update balance
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      // Disallow direct balance updates from client — Cloud Functions only
+      allow update: if isAdmin() && !("balance" in request.resource.data.diff(resource.data).affectedKeys());
+    }
+
+    // ── Ads collection ────────────────────────────────────────────────────────
+    // Anyone logged in can read active ads; only admins can write
+    match /ads/{adId} {
+      allow read: if isSignedIn() && resource.data.active == true;
+      allow read, write: if isAdmin();
+    }
+
+    // ── Earnings ──────────────────────────────────────────────────────────────
+    // Only Cloud Functions write earnings (via Admin SDK — bypasses rules)
+    match /earnings/{docId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false; // Cloud Functions only (Admin SDK)
+    }
+
+    // ── Revenue totals ────────────────────────────────────────────────────────
+    match /revenue/{docId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ── Used tokens (idempotency) ─────────────────────────────────────────────
+    match /usedTokens/{token} {
+      allow read, write: if false; // Cloud Functions only
+    }
+
+    // ── Withdrawals ───────────────────────────────────────────────────────────
+    match /withdrawals/{docId} {
+      // Users can read their own, admins can read all
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Users create requests; balance deduction is in the same transaction
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidAmount(request.resource.data.amount)
+        && request.resource.data.status == "pending"
+        && request.resource.data.processed == false;
+      // Only admins can update status
+      allow update: if isAdmin();
+    }
+  }
+}
